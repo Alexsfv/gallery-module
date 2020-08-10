@@ -31,9 +31,12 @@ class Gallery {
 
     initComponents() {
         this.components.forEach(Component => {
-            const div = document.createElement('div');
-            div.className = Component.className();
-            const component = new Component(div);
+            const tag = Component.getTagName ?
+                Component.getTagName():
+                'div';
+            const node = document.createElement(tag);
+            node.className = Component.className();
+            const component = new Component(node);
             component.$el.innerHTML = component.toHTML();
             this.Elements[Component.shortName()] = component;
             this.Elements[ContainerApp.shortName()].$el.appendChild(component.$el);
@@ -80,6 +83,9 @@ class Gallery {
         const img = $('[data-imageOfApp=""]');
         this.activeImage = imgObject;
         img.src = imgObject.path;
+        
+        //*checking whether the user has deleted the upload button*
+        this.Elements.downloadBtn.changeHref(imgObject);
     }
 
     setSinglePreset() {
@@ -294,6 +300,33 @@ class SlidePrev extends SlideBtn {
     }
 }
 
+class DownloadBtn extends DOMListener {
+    static getTagName() {
+        return 'a';
+    };
+    static shortName() {
+        return 'downloadBtn';
+    };
+    static className() {
+        return 'btn-download__galleryApp'
+    }
+    constructor(el) {
+        super({
+            el: el,
+            listeners: [],
+        });
+        this.$el = el;
+        this.initDomListeners(this.$el);
+        this.$el.download = '';
+    }
+    changeHref(imgObject) {
+        this.$el.href = imgObject.path;
+    }
+    toHTML() {
+        return '<span class="vertical-stick"></span>';
+    }
+}
+
 function initGallery(imgObject) {
     gallery.build(imgObject);
 }
@@ -329,7 +362,7 @@ function $all(selector) {
 }
 
 const gallery = new Gallery({
-    components: [CrossClosing, SlideNext, SlidePrev],
+    components: [CrossClosing, SlideNext, SlidePrev, DownloadBtn],
 });
 
 
