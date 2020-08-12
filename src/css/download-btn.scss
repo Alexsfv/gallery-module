@@ -1,0 +1,58 @@
+.btn-download__galleryApp {
+    box-sizing: content-box;
+    display: block;
+    text-decoration: none;
+    width: 30px;
+    height: 30px;
+    position: absolute;
+    top: 50px;
+    right: 10px;
+    background-color: rgba(78, 78, 78, 0);
+    border: 1px dotted rgba(255, 255, 255, 0.671);
+    border-radius: 50%;
+    text-align: center;
+}
+
+.btn-download__galleryApp::before, .btn-download__galleryApp::after{
+    display: block;
+    content: '';
+    position: absolute;
+    width: 4px;
+    height: 45%;
+    bottom: 2px;
+    background-color:#fff;
+    border-radius: 6px;
+    opacity: 0;
+}
+
+.btn-download__galleryApp::after {
+    left: 9px;
+    transform: rotate(-45deg);
+}
+
+.btn-download__galleryApp::before {
+    right: 9px;
+    transform: rotate(45deg);
+}
+
+.btn-download__galleryApp .vertical-stick {
+    position: absolute;
+    width: 4px;
+    height: 24px;
+    background-color: #fff;
+    border-radius: 6px;
+    left: 50%;
+    bottom: 3px;
+    transform: translateX(-50%);
+    opacity: 0;
+}
+
+.btn-download__galleryApp:hover {
+    cursor: pointer;
+}
+
+.btn-download__galleryApp:hover::before,
+.btn-download__galleryApp:hover::after,
+.btn-download__galleryApp:hover .vertical-stick {
+    opacity: 1;
+}
