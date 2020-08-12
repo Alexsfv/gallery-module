@@ -167,7 +167,11 @@ class CloseApp extends DOMListener {
             gallery.hiddeApp();
             toggleBodyScroll('unlock');
         }
+
+        //disable FullScreen after closing app
+        gallery.Elements.fullScreenBtn.disableFullScreen();
     }
+
 }
 
 class ContainerApp {
@@ -228,7 +232,7 @@ class BgClosing extends CloseApp {
     };
     constructor(el) {
         super({
-            el: el,
+            el,
             listeners: ['click'],
         });
     }
@@ -247,7 +251,7 @@ class CrossClosing extends CloseApp {
     };
     constructor(el) {
         super({
-            el: el,
+            el,
             listeners: ['click'],
         });
     }
@@ -265,7 +269,7 @@ class SlideNext extends SlideBtn {
     };
     constructor(el) {
         super({
-            el: el,
+            el,
             listeners: ['click'],
         });
     }
@@ -287,7 +291,7 @@ class SlidePrev extends SlideBtn {
     };
     constructor(el) {
         super({
-            el: el,
+            el,
             listeners: ['click'],
         });
     }
@@ -312,7 +316,7 @@ class DownloadBtn extends DOMListener {
     }
     constructor(el) {
         super({
-            el: el,
+            el,
             listeners: [],
         });
         this.$el = el;
@@ -324,6 +328,51 @@ class DownloadBtn extends DOMListener {
     }
     toHTML() {
         return '<span class="vertical-stick"></span>';
+    }
+}
+
+class FullScreenBtn extends DOMListener {
+    static shortName() {
+        return 'fullScreenBtn';
+    };
+    static className() {
+        return 'btn-fullScreen__galleryApp';
+    };
+
+    constructor(el) {
+        super({
+            el,
+            listeners: ['click'],
+        });
+        this.$el = el;
+        this.initDomListeners(this.$el);
+        this.status = false;
+    }
+
+    onClick() {
+        event.stopPropagation();
+        !(this.status) ?
+            this.activeFullScreen():
+            this.disableFullScreen();
+    }
+
+    activeFullScreen() {
+        this.classesContainer.add('fullScreen');
+        this.status = true;
+    }
+
+    disableFullScreen() {
+        this.classesContainer.remove('fullScreen');
+        this.status = false;
+    }
+
+    toHTML() {
+        this.initClassesContainer();
+        return '<span class="corner"></span>';
+    }
+
+    initClassesContainer() {
+        this.classesContainer = gallery.Elements.containerApp.$el.classList;
     }
 }
 
@@ -362,7 +411,12 @@ function $all(selector) {
 }
 
 const gallery = new Gallery({
-    components: [CrossClosing, SlideNext, SlidePrev, DownloadBtn],
+    components: [
+        CrossClosing,
+        SlideNext,
+        SlidePrev,
+        DownloadBtn,
+        FullScreenBtn],
 });
 
 

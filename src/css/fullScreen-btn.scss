@@ -1,0 +1,70 @@
+.btn-fullScreen__galleryApp {
+    position: absolute;
+    width: 30px;
+    height: 30px;
+    top: 10px;
+    right: 10px;
+    // background-color: red;
+}
+
+.btn-fullScreen__galleryApp::before,
+.btn-fullScreen__galleryApp::after,
+.btn-fullScreen__galleryApp .corner::before,
+.btn-fullScreen__galleryApp .corner::after {
+    display: block;
+    content: '';
+    position: absolute;
+    opacity: 0.1;
+    background-color: #fff;
+    transition: all 0.5s ease;
+}
+
+.btn-fullScreen__galleryApp::before {
+    width: 10px;
+    height: 3px;
+    left: 60%;
+    transform: skew(45deg);
+}
+
+.btn-fullScreen__galleryApp:hover::before {
+    left: 5%;
+    opacity: 1;
+}
+
+.btn-fullScreen__galleryApp::after {
+    width: 3px;
+    height: 10px;
+    top: 60%;
+    transform: skewY(45deg);
+}
+
+.btn-fullScreen__galleryApp:hover::after {
+    top: 5%;
+    opacity: 1;
+}
+
+.btn-fullScreen__galleryApp .corner::before {
+    width: 10px;
+    height: 3px;
+    top: 27px;
+    right: 60%;
+    transform: skew(45deg);
+}
+
+.btn-fullScreen__galleryApp:hover .corner::before {
+    right: 5%;
+    opacity: 1;
+}
+
+.btn-fullScreen__galleryApp .corner::after {
+    width: 3px;
+    height: 10px;
+    right: 0;
+    bottom: 60%;
+    transform: skewY(45deg);
+}
+
+.btn-fullScreen__galleryApp:hover .corner::after {
+    bottom: 5%;
+    opacity: 1;
+}
