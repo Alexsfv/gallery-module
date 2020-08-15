@@ -1,0 +1,25 @@
+.counter__galleryApp {
+    position: absolute;
+    bottom: 15px;
+    left: 50%;
+    transform: translateX(-50%);
+    opacity: 0.3;
+    z-index: 10000000;
+
+    color: #ffffff;
+    font-family:  sans-serif, Arial, Helvetica;
+    text-shadow: 1px 1px 2px black;
+    transition: all 0.3s ease;
+}
+
+.counter__galleryApp:hover {
+    opacity: 1;
+}
+
+.counter__galleryApp:focus {
+    opacity: 1;
+}
+
+.counter__galleryApp .current {
+    outline: none;
+}

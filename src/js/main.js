@@ -86,6 +86,8 @@ class Gallery {
         
         //*checking whether the user has deleted the upload button*
         this.Elements.downloadBtn.changeHref(imgObject);
+        this.Elements.counter.refreshValue(
+            imgObject.index + 1, this.groups[imgObject.selector].length)
     }
 
     setSinglePreset() {
@@ -376,6 +378,100 @@ class FullScreenBtn extends DOMListener {
     }
 }
 
+class Counter extends DOMListener {
+    static shortName() {
+        return 'counter';
+    };
+    static className() {
+        return 'counter__galleryApp';
+    };
+    constructor(el) {
+        super({
+            el,
+            listeners: ['click', 'keydown', 'wheel'],
+        });
+        this.$el = el;
+        this.initDomListeners(this.$el);
+    }
+
+    onClick() {
+        event.stopPropagation();
+    }
+
+    onWheel(event) {
+        if (event.deltaY < 0) {
+            gallery.nextImage();
+        } else {
+            gallery.previousImage();
+        }
+    }
+
+    onBlur() {
+        this.openImage(this.$currentField.innerHTML);
+    }
+
+    onKeydown() {
+        const controlButtons = [8, 37, 39, 46];
+        const isNumner = (event.keyCode >= 48 && event.keyCode <= 57);
+        const isControl = controlButtons.indexOf(event.keyCode) != -1;
+        if (!isNumner && !isControl) {
+            event.preventDefault();
+        }
+
+        if (event.key === 'Enter') {
+            const findValue = +(this.$currentField.innerHTML);
+            this.openImage(findValue);
+        }
+    }
+
+    openImage(findValue) {
+        const value = this.checkValidValue(findValue);
+        const activeSelector = gallery.activeImage.selector;
+        const imgObject = gallery.groups[activeSelector][value - 1];
+        
+        gallery.changeImage(imgObject);
+    }
+
+    checkValidValue(findValue) {
+        if (findValue > this.maxValue) {
+            return this.maxValue;
+        } else if (findValue < 0) {
+            return 0;
+        } else {
+            return findValue;
+        }
+    }
+
+    toHTML() {
+        return `<span class="current" contenteditable></span>
+        <span>&bull;</span>
+        <span class="max-value"></span>`
+    }
+
+    refreshValue(value, max) {
+        if (!this.$currentField) {
+            this.$currentField = $('.counter__galleryApp .current');
+        }
+        this.currentValue = value;
+        this.$currentField.innerHTML = value;
+
+        if (!this.$maxValueField || this.maxValue != max) {
+            this.$maxValueField = $('.counter__galleryApp .max-value');
+            this.maxValue = max;
+            this.$maxValueField.innerHTML = max;
+        }
+
+        this.initOnBlur();
+    }
+
+    initOnBlur() {
+        if ( !(this.$currentField.listeners) ) {
+            this.$currentField.addEventListener('blur', this.onBlur.bind(this));
+        }
+        
+    }
+}
+
 function initGallery(imgObject) {
     gallery.build(imgObject);
 }
@@ -416,7 +512,8 @@ const gallery = new Gallery({
         SlideNext,
         SlidePrev,
         DownloadBtn,
-        FullScreenBtn],
+        FullScreenBtn,
+        Counter],
 });
 
 
