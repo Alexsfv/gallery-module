@@ -38,6 +38,10 @@ class Gallery {
             node.className = Component.className();
             const component = new Component(node);
             component.$el.innerHTML = component.toHTML();
+            //init inner components of the component if there are any
+            (component.initInnerComponents) ?
+                component.initInnerComponents():
+                null
             this.Elements[Component.shortName()] = component;
             this.Elements[ContainerApp.shortName()].$el.appendChild(component.$el);
         });
@@ -472,6 +476,112 @@ class Counter extends DOMListener {
     }
 }
 
+class Autoslider extends DOMListener {
+    static getTagName() {
+        return 'form';
+    };
+    static shortName() {
+        return 'autoSlider';
+    };
+    static className() {
+        return 'autoSlider-wrapper';
+    };
+
+    constructor(el) {
+        super({
+            el,
+            listeners: [],
+        });
+        this.$el = el;
+        this.initDomListeners(this.$el);
+    }
+
+    changedCheckbox() {
+        if (this.$checkbox.checked) {
+            console.log(2132132);
+            clearInterval(this.indexTimeout);
+            this.indexTimeout = setInterval(gallery.nextImage.bind(gallery), this.timeout);
+        } else {
+            console.log(888);
+            clearInterval(this.indexTimeout);
+        }
+    }
+
+    changedRange() {
+        this.timeout = this.getTimeout();
+        this.setStyleRange();
+        this.changedCheckbox();
+
+        this.recalIndicator();
+    }
+
+    setStyleRange() {
+        const range = this.$range;
+        const divisionValue = +(range.clientWidth) / +(range.max);
+        const widthLine = divisionValue * +(range.value);
+        const bgStyle = `linear-gradient(to right,
+                                        #ffffff ${widthLine}%,
+                                        #676767 ${widthLine}%)`;
+        range.style.background = bgStyle;
+    }
+
+    initRange() {
+        let bgStyle = 'linear-gradient(to right, #ffffff 7%, #676767 7%)';
+        this.$range = this.$el.elements.sliderRange;
+        this.$range.style.background = bgStyle;
+        this.$range.addEventListener('change', this.changedRange.bind(this));
+        this.$range.addEventListener('input', this.changedRange.bind(this));
+        this.timeout = this.getTimeout();
+    }
+
+    initCheckbox() {
+        this.$checkbox = this.$el.elements.autoslider;
+        this.$checkbox.addEventListener('change', this.changedCheckbox.bind(this));
+        this.indexTimeout = null;
+    }
+
+    initIndicator() {
+        this.$indicator = this.$el.children[2].children[1];
+    }
+
+    recalIndicator() {
+        const value = +(this.$range.value);
+        let word;
+        switch(value) {
+            case 1:
+                word = ' секунда';
+                break;
+            case 2:
+            case 3:
+            case 4:
+                word = ' секунды';
+                break;
+            default:
+                word = ' секунд';
+        }
+        this.$indicator.innerText = value + word;
+    }
+
+    initInnerComponents() {
+        this.initIndicator();
+        this.initCheckbox();
+        this.initRange();
+    }
+
+    toHTML() {
+        return `<input type="checkbox" id="autoslider">
+        <label class="checkmark" for="autoslider">Показ слайдов</label>
+        <div class="wrapper-range">
+          <input type="range" id="sliderRange" min="1" max="15" step="1" value="1">
+          <span class="time-indicator">1 секунда</span>
+        </div>`
+    }
+
+    getTimeout() {
+        return +(this.$range.value) * 1000;
+    }
+}
+
 function initGallery(imgObject) {
     gallery.build(imgObject);
 }
@@ -513,7 +623,8 @@ const gallery = new Gallery({
         SlidePrev,
         DownloadBtn,
         FullScreenBtn,
-        Counter],
+        Counter,
+        Autoslider],
 });
 
 
