@@ -38,6 +38,10 @@ class Gallery {
             node.className = Component.className();
             const component = new Component(node);
             component.$el.innerHTML = component.toHTML();
+            //init inner components of the component if there are any
+            (component.initInnerComponents) ?
+                component.initInnerComponents():
+                null
             this.Elements[Component.shortName()] = component;
             this.Elements[ContainerApp.shortName()].$el.appendChild(component.$el);
         });
@@ -77,6 +81,8 @@ class Gallery {
 
     hiddeApp() {
         this.$root.classList.add('hidden');
+
+        this.stopAutoSlider();
     }
 
     changeImage(imgObject) {
@@ -90,13 +96,24 @@ class Gallery {
             imgObject.index + 1, this.groups[imgObject.selector].length)
     }
 
+    smoothChangeImage(imgObject) {
+        const img = $('[data-imageOfApp=""]');
+        this.activeImage = imgObject;
+
+        
+        //*checking whether the user has deleted the upload button*
+        this.Elements.downloadBtn.changeHref(imgObject);
+        this.Elements.counter.refreshValue(
+            imgObject.index + 1, this.groups[imgObject.selector].length)
+    }
+
     setSinglePreset() {
         const elems = this.Elements;
         for (let element in elems) {
             if (elems.hasOwnProperty(element)) {
                 if(elems[element].singlePreset) {
                     const nodeElement = elems[element].$el;
-                    nodeElement.classList.add('hidden')
+                    nodeElement.classList.add('hidden');
                 }
             }  
         }
@@ -120,19 +137,105 @@ class Gallery {
             newIndex = indexImage - 1;
         const newImage = this.groups[this.activeImage.selector][newIndex];
         this.changeImage(newImage);
+        this.makeAutosliderCooldown();
     }
 
     nextImage() {
-        const indexImage = this.activeImage.index;
+        const {newImage: newImage} = this.getDataImage();
+        this.changeImage(newImage);
+        this.makeAutosliderCooldown();
+    }  
+    
+    smoothNextImage() {
+        const {newImage: newImage} = this.getDataImage();
+        const container = $('.img-container__galleryApp');
+        const img = $('[data-imageOfApp=""]');
+
+        if (!this.newSmoothImage) {
+            this.newSmoothImage = newImage.$el.cloneNode();
+            this.newSmoothImage.alt = '#';
+            this.newSmoothImage.classList.add('next-img');
+            container.appendChild(this.newSmoothImage);
+        }
+        this.newSmoothImage.src = newImage.path;
+
+        if (!this.autosliderCooldown) {
+            this.hideCurrentImg(img);
+            this.showNextImg(this.newSmoothImage);
+        }
+    }
+
+    hideCurrentImg(img) {
+        setTimeout(() => {
+            img.style.transition = 'all 1s linear';
+            img.style.opacity = '0';
+        }, 0);
+        setTimeout(() => {
+            const {newImage: newImage} = this.getDataImage();
+            img.style.transition = 'all 0s linear';
+            this.changeImage(newImage);
+            img.style.opacity = '1';
+        }, 1000);
+    }
+
+    showNextImg(newSmoothImage) {
+        setTimeout(() => {
+            newSmoothImage.style.transition = 'all 1s linear';
+            newSmoothImage.style.opacity = '1';
+        }, 0);
+        setTimeout(() => {
+            newSmoothImage.style.transition = 'all 0s linear';
+            newSmoothImage.style.opacity = '0';
+        }, 1000);
+    }
+
+    makeAutosliderCooldown() {
+        this.autosliderCooldown = true;
+        const indexTimeout = setTimeout(() => {
+            this.autosliderCooldown = false;
+        }, 700);
+
+        if (!this.cooldownIndexes) {
+            this.cooldownIndexes = [];
+        }
+        if (this.cooldownIndexes.length >= 1) {
+            this.clearCooldownIndexes();
+        }
+        this.cooldownIndexes.push(indexTimeout);
+    };
+
+    clearCooldownIndexes() {
+        this.cooldownIndexes.forEach(timeoutID => {
+            clearTimeout(timeoutID);
+            this.cooldownIndexes = [];
+        });
+    }
+
+    getDataImage() {
+        const indexCurrentImage = this.activeImage.index;
         let newIndex;
         
         const maxIndex = this.groups[this.activeImage.selector].length - 1;
-        (indexImage === maxIndex) ?
+        (indexCurrentImage === maxIndex) ?
             newIndex = 0:
-            newIndex = indexImage + 1;
+            newIndex = indexCurrentImage + 1;
         const newImage = this.groups[this.activeImage.selector][newIndex];
-        this.changeImage(newImage);
-    }   
+
+        return {
+            currentIndex: indexCurrentImage,
+            maxIndex: maxIndex,
+            newImage: newImage,
+        };
+    }
+
+    stopAutoSlider() {
+        let autosliderCheckbox = this.Elements.autoSlider.$checkbox;
+        if (autosliderCheckbox.checked) {
+            const event = new Event('change');
+            autosliderCheckbox.checked = false;
+            autosliderCheckbox.dispatchEvent(event);
+        }
+    }
 }
 
 class DOMListener {
@@ -165,23 +268,29 @@ class CloseApp extends DOMListener {
     onClick() {
         event.stopPropagation();
         if (event.target === this.$el) {
-            
             gallery.hiddeApp();
             toggleBodyScroll('unlock');
         }
 
-        //disable FullScreen after closing app
         gallery.Elements.fullScreenBtn.disableFullScreen();
     }
 
 }
 
-class ContainerApp {
+class ContainerApp extends DOMListener {
     static shortName() {
         return 'containerApp';
     };
     constructor(el) {
+        super({
+            listeners: ['click'],
+        });
         this.$el = el;
+        this.initDomListeners(this.$el);
+    }
+
+    onClick(e) {
+        e.stopPropagation();
     }
 
     addImageContainer() {
@@ -318,7 +427,6 @@ class DownloadBtn extends DOMListener {
     }
     constructor(el) {
         super({
-            el,
             listeners: [],
         });
         this.$el = el;
@@ -343,16 +451,17 @@ class FullScreenBtn extends DOMListener {
 
     constructor(el) {
         super({
-            el,
             listeners: ['click'],
         });
         this.$el = el;
         this.initDomListeners(this.$el);
         this.status = false;
+        this.initButtonSlider();
     }
 
     onClick() {
         event.stopPropagation();
+        
         !(this.status) ?
             this.activeFullScreen():
             this.disableFullScreen();
@@ -361,11 +470,22 @@ class FullScreenBtn extends DOMListener {
     activeFullScreen() {
         this.classesContainer.add('fullScreen');
         this.status = true;
+        window.addEventListener('keydown', this.closeByEsc);
+        this.showAutoslider();
+    }
+
+    closeByEsc(e) {
+        const context = gallery.Elements.fullScreenBtn;
+        if (e.code === 'Escape') {
+            window.removeEventListener('keydown', context.closeByEsc);
+            context.disableFullScreen();
+        }
     }
 
     disableFullScreen() {
         this.classesContainer.remove('fullScreen');
         this.status = false;
+        this.hideAutoslider();
     }
 
     toHTML() {
@@ -375,6 +495,32 @@ class FullScreenBtn extends DOMListener {
 
     initClassesContainer() {
         this.classesContainer = gallery.Elements.containerApp.$el.classList;
+    }
+
+    initButtonSlider() {
+        window.addEventListener('keydown', function(e) {
+            const isActive = !(gallery.$root.classList.contains('hidden'));
+            if (isActive) {
+                if (e.code === 'ArrowRight') {
+                    event.preventDefault();
+                    gallery.nextImage();
+                }
+                if (e.code === 'ArrowLeft') {
+                    gallery.previousImage();
+                }
+            }
+        })
+    }
+
+    showAutoslider() {
+        const autoslider = gallery.Elements.autoSlider.$el;
+        autoslider.classList.remove('hide');
+    }
+
+    hideAutoslider() {
+        const autoslider = gallery.Elements.autoSlider.$el;
+        autoslider.classList.add('hide');
+        gallery.stopAutoSlider();
     }
 }
 
@@ -387,7 +533,6 @@ class Counter extends DOMListener {
     };
     constructor(el) {
         super({
-            el,
             listeners: ['click', 'keydown', 'wheel'],
         });
         this.$el = el;
@@ -472,6 +617,119 @@ class Counter extends DOMListener {
     }
 }
 
+class Autoslider extends DOMListener {
+    static getTagName() {
+        return 'form';
+    };
+    static shortName() {
+        return 'autoSlider';
+    };
+    static className() {
+        return 'autoSlider-wrapper hide';
+    };
+
+    constructor(el) {
+        super({
+            listeners: ['click'],
+        });
+        this.$el = el;
+        this.singlePreset = true;
+        this.initDomListeners(this.$el);
+    }
+
+    onClick() {
+        event.stopPropagation();
+    }
+
+    changedCheckbox() {
+        if (this.$checkbox.checked) {
+            clearInterval(this.indexTimeout);
+            this.indexTimeout = setInterval(gallery.smoothNextImage.bind(gallery), this.timeout);
+        } else {
+            clearInterval(this.indexTimeout);
+        }
+    }
+
+    changedRange() {
+        this.timeout = this.getTimeout();
+        this.setStyleRange();
+        this.changedCheckbox();
+
+        this.recalIndicator();
+    }
+
+    setStyleRange() {
+        const range = this.$range;
+        const divisionValue = +(range.clientWidth) / +(range.max);
+        const widthLine = divisionValue * +(range.value);
+        const bgStyle = `linear-gradient(to right,
+                                        #ffffff ${widthLine}%,
+                                        #676767 ${widthLine}%)`;
+        range.style.background = bgStyle;
+    }
+
+    initRange() {
+        let bgStyle = 'linear-gradient(to right, #ffffff 7%, #676767 7%)';
+        this.$range = this.$el.elements.sliderRange;
+        this.$range.style.background = bgStyle;
+        this.$range.addEventListener('change', this.changedRange.bind(this));
+        this.$range.addEventListener('input', this.changedRange.bind(this));
+        this.timeout = this.getTimeout();
+    }
+
+    initCheckbox() {
+        this.$checkbox = this.$el.elements.autoslider;
+        this.$checkbox.addEventListener('change', this.changedCheckbox.bind(this));
+        this.indexTimeout = null;
+    }
+
+    initIndicator() {
+        this.$indicator = this.$el.children[2].children[1];
+    }
+
+    recalIndicator() {
+        const value = +(this.$range.value);
+        let word;
+        switch(value) {
+            case 1:
+                word = ' секунда';
+                break;
+            case 2:
+            case 3:
+            case 4:
+                word = ' секунды';
+                break;
+            default:
+                word = ' секунд';
+        }
+        this.$indicator.innerText = value + word;
+    }
+
+    initInnerComponents() {
+        this.initIndicator();
+        this.initCheckbox();
+        this.initRange();
+    }
+
+    toHTML() {
+        return `<input type="checkbox" id="autoslider">
+        <label class="checkmark" for="autoslider">Показ слайдов</label>
+        <div class="wrapper-range">
+          <input type="range" id="sliderRange" min="1" max="15" step="1" value="1">
+          <span class="time-indicator">1 секунда</span>
+        </div>`
+    }
+
+    getTimeout() {
+        return +(this.$range.value) * 1000 + 1000;
+    }
+
+    stopAutoSlider() {
+        let a = this.$checkbox
+        debugger
+    }
+}
+
 function initGallery(imgObject) {
     gallery.build(imgObject);
 }
@@ -513,7 +771,8 @@ const gallery = new Gallery({
         SlidePrev,
         DownloadBtn,
         FullScreenBtn,
-        Counter],
+        Counter,
+        Autoslider],
 });
 
 
