@@ -13,6 +13,10 @@
     }
 }
 
+.autoSlider-wrapper.hide, .autoSlider-wrapper.hidden {
+    display: none;
+}
+
 #autoslider {
     display: none;
 }
