@@ -13,6 +13,7 @@ class Gallery {
         this.groups = {};
         this.activeImage = {};
         this.components = options.components || {};
+        this._variables = {};
     }
 
     getRoot() {
@@ -236,6 +237,66 @@ class Gallery {
             autosliderCheckbox.dispatchEvent(event);
         }
     }
+
+    startTrackingMove() {
+        const body = $('body');
+        this._variables.trotlingShow = trotlingMove.bind(this, body, 1000);
+
+        body.addEventListener('mousemove', this._variables.trotlingShow);
+
+        this._variables.autoHideId = setTimeout(() => {
+            this.hideElemsOnFullscreen();
+        }, 1000);
+
+        function trotlingMove(target, delay) {
+            target.removeEventListener('mousemove', this._variables.trotlingShow);
+
+            this._variables.hideAfterMoveId = setTimeout(() => {
+                target.addEventListener('mousemove', this._variables.trotlingShow);
+                this.hideElemsOnFullscreen();
+            }, delay);
+            this.showElemsOnFullscreen();
+            clearTimeout(this._variables.autoHideId);
+        }
+    }
+
+    stopTrackingMove() {
+        const body = $('body');
+        if (this._variables.trotlingShow) {
+            body.removeEventListener('mousemove', this._variables.trotlingShow);
+            this.showElemsOnFullscreen();
+            delete this._variables.trotlingShow;
+
+            if (this._variables.autoHideId) {
+                clearTimeout(this._variables.autoHideId);
+                delete this._variables.autoHideId;
+            }
+
+            if (this._variables.hideAfterMoveId) {
+                clearTimeout(this._variables.hideAfterMoveId);
+                delete this._variables.hideAfterMoveId;
+
+            }
+        }
+    }
+
+    hideElemsOnFullscreen() {
+        const elements = this.Elements;
+        elements.crossClosing.setOpacity(0, '1s');
+        elements.downloadBtn.setOpacity(0, '1s');
+        elements.fullScreenBtn.setOpacity(0, '1s');
+        elements.slideNext.setOpacity(0, '1s');
+        elements.slidePrev.setOpacity(0, '1s');
+    }
+
+    showElemsOnFullscreen() {
+        const elements = this.Elements;
+        elements.crossClosing.setOpacity('1', '1s');
+        elements.downloadBtn.setOpacity('1', '1s');
+        elements.fullScreenBtn.setOpacity('1', '1s');
+        elements.slideNext.setOpacity('1', '1s');
+        elements.slidePrev.setOpacity('1', '1s');
+    }
 }
 
 class DOMListener {
@@ -369,6 +430,11 @@ class CrossClosing extends CloseApp {
     toHTML() {
         return '';
     }
+    setOpacity(value, duration) {
+        this.$el.style.transition = `all ${duration} ease`;
+        this.$el.style.opacity = value + '';
+        return this;
+    }
 }
 
 class SlideNext extends SlideBtn {
@@ -391,6 +457,11 @@ class SlideNext extends SlideBtn {
         event.stopPropagation();
         gallery.nextImage();
     }
+    setOpacity(value, duration) {
+        this.$el.style.transition = `all ${duration} ease`;
+        this.$el.style.opacity = value + '';
+        return this;
+    }
 }
 
 class SlidePrev extends SlideBtn {
@@ -412,6 +483,11 @@ class SlidePrev extends SlideBtn {
     onClick() {
         event.stopPropagation();
         gallery.previousImage();
+    }
+    setOpacity(value, duration) {
+        this.$el.style.transition = `all ${duration} ease`;
+        this.$el.style.opacity = value + '';
+        return this;
     }
 }
 
@@ -438,6 +514,11 @@ class DownloadBtn extends DOMListener {
     }
     toHTML() {
         return '<span class="vertical-stick"></span>';
+    }
+    setOpacity(value, duration) {
+        this.$el.style.transition = `all ${duration} ease`;
+        this.$el.style.opacity = value + '';
+        return this;
     }
 }
 
@@ -472,6 +553,7 @@ class FullScreenBtn extends DOMListener {
         this.status = true;
         window.addEventListener('keydown', this.closeByEsc);
         this.showAutoslider();
+        gallery.startTrackingMove();
     }
 
     closeByEsc(e) {
@@ -486,6 +568,7 @@ class FullScreenBtn extends DOMListener {
         this.classesContainer.remove('fullScreen');
         this.status = false;
         this.hideAutoslider();
+        gallery.stopTrackingMove();
     }
 
     toHTML() {
@@ -521,6 +604,12 @@ class FullScreenBtn extends DOMListener {
         const autoslider = gallery.Elements.autoSlider.$el;
         autoslider.classList.add('hide');
         gallery.stopAutoSlider();
+    }
+
+    setOpacity(value, duration) {
+        this.$el.style.transition = `all ${duration} ease`;
+        this.$el.style.opacity = value + '';
+        return this;
     }
 }
 
