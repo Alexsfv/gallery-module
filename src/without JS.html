@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>galleryApp</title>
+  <link rel="stylesheet" href="./css/index.css">
+</head>
+<body>
+  
+  <div class="container">
+    <p>Пример галереи с несколькими картинками (нужно нажать на картинку)</p>
+    <div class="wrapper-img">
+      <img src="./img/1.jpg" alt="#" data-gallery="">
+    </div>
+
+    <div class="wrapper-img">
+      <img src="./img/2.jpg" alt="#" data-gallery="">
+    </div>
+
+    <div class="wrapper-img">
+      <img src="./img/3.png" alt="#" data-gallery="">
+    </div>
+
+    <div class="wrapper-img">
+      <img src="./img/4.jpg" alt="#" data-gallery="">
+    </div>
+
+    <div class="wrapper-img">
+      <img src="./img/5.jpg" alt="#" data-gallery="">
+    </div>
+
+    <div class="wrapper-img">
+      <img src="./img/6.jpeg" alt="#" data-gallery="">
+    </div>
+
+  </div>
+
+  <div class="container">
+    <p>Пример галереи с одной кратинкой (не листается)</p>
+    <div class="wrapper-img">
+      <img src="./img/7.jpg" alt="#" data-gallery-two="">
+    </div>
+  </div>
+
+
+  <div class="galleryApp">
+
+    <div class="container__galleryApp">
+      
+
+      <div class="img-container__galleryApp">
+        <img src="./img/2.jpg" alt="#">
+        <img src="./img/4.jpg" alt="#" class="next-img">
+        <div class="cover-image__galleryApp"></div>
+      </div>
+
+      <div class="close__galleryApp"></div>
+      
+      <div class="btn-wrapper previous">
+        <div class="btn-prev__btn-wrapper"></div>
+      </div>
+
+      <div class="btn-wrapper next">
+        <div class="btn-next__btn-wrapper"></div>
+      </div>
+
+      <div class="btn-download__galleryApp" href="./img/2.jpg" download>
+        <span class="vertical-stick"></span>
+      </div>
+
+      <div class="btn-fullScreen__galleryApp">
+        <span class="corner"></span>
+      </div>
+
+      <div class="counter__galleryApp">
+        <span class="current" contenteditable>10</span>
+        <span>&bull;</span>
+        <span class="max-value">999</span>
+      </div>
+
+      <form class="autoSlider-wrapper">
+        <input type="checkbox" id="autoslider">
+        <label class="checkmark" for="autoslider">Показ слайдов</label>
+        <div class="wrapper-range">
+          <input type="range" id="sliderRange" min="1" max="20" step="1" value="1">
+          <span class="time-indicator">15 seconds</span>
+        </div>
+      </form>
+    </div>
+  </div>
+</body>
+</html>

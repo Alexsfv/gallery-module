@@ -23,3 +23,11 @@
 .counter__galleryApp .current {
     outline: none;
 }
+
+@media screen and (max-width:576px) {
+    .counter__galleryApp {
+        top: 10px;
+        left: 30px;
+        transform: translateX(0%);
+    }
+}
