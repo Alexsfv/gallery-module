@@ -741,6 +741,7 @@ class Autoslider extends DOMListener {
 
     changedRange() {
         this.timeout = this.getTimeout();
+        this.showAndHideIndicator();
         this.setStyleRange();
         this.changedCheckbox();
 
@@ -774,6 +775,16 @@ class Autoslider extends DOMListener {
 
     initIndicator() {
         this.$indicator = this.$el.children[2].children[1];
+
+    }
+
+    showAndHideIndicator(delay = 600) {
+        this.$indicator.style.opacity = 1;
+        clearTimeout(this.showHideIndicatorId);
+        this.showHideIndicatorId = setTimeout(() => {
+            this.$indicator.style.opacity = 0;
+            this.$indicator.style.opacity = '';
+        }, delay);
     }
 
     recalIndicator() {
